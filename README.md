@@ -1,5 +1,5 @@
 # DS_project_Horse_races
-Machine learning project where I intend to collect and analysis data from horse races in France over the period 2004-2019.
+Machine learning project where I intend to collect and analyze data from horse races in France over the period 2004-2019.
 
 Prospects of the project include:
 - web scraping / data cleaning
