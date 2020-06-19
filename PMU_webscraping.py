@@ -1,6 +1,6 @@
 # Program designed to scrape data from horse races on the website
 # turf-fr.com
-# Last edited 06/07/2020
+# Last edited 06/19/2020
 
 import os
 import requests
@@ -55,10 +55,10 @@ def get_races_description(my_soup):
         .find_all('p', id='presentation_course')[1:]]
 
 
-# Get list of horses starting spots
+# Get list of horses ID numbers
 
 
-def get_starting_spots(race_info_html):
+def get_horses_ID(race_info_html):
     return [
         x.contents[0]
         for x in race_info_html.find_all('td', id='numero_cheval')[1:]]
@@ -96,19 +96,19 @@ def get_horses_shoeing_statuses(race_info_html):
         for x in race_info_html.find_all('img', alt='Déferrés')[1:]]
 
 
-# Get list of horses weights
+# Get list of jockey's weights
 
 
-def get_horses_weights(race_info_html):
+def get_jockeys_weights(race_info_html):
     return [
         (x.contents or ['n/a'])[0]
         for x in race_info_html.find_all('td', id='poid_cheval')[1:]]
 
 
-# Get list of horses barrier numbers
+# Get list of horses starting spot
 
 
-def get_horses_barrier_numbers(race_info_html):
+def get_horses_barrier(race_info_html):
     return [
         (x.contents or ['n/a'])[0]
         for x in race_info_html.find_all('td', id='corde_cheval')[1:]]
@@ -257,6 +257,8 @@ def get_winners(results, race_participants_number):
 def retrieve_race(website_url):
     page = requests.get(website_url)
     soup = BeautifulSoup(page.content, 'html.parser')
+    if len(soup.find_all(('td', id='course_numero')) <= 1:
+        return None
     races_df = pd.DataFrame(transpose([
         get_races_categories(soup),
         get_races_names(soup),
@@ -299,7 +301,7 @@ def retrieve_horses(race_soup, race_number):
     race_result_text = race_info_html.find(
         'div', id='decompte_depart_course').find('strong').contents
     race_participants_number = len(
-        set(get_starting_spots(race_info_html)))
+        set(get_horses_ID(race_info_html)))
     race_result = [0]*race_participants_number
     if len(race_result_text) > 0:
         race_result = [
@@ -311,12 +313,12 @@ def retrieve_horses(race_soup, race_number):
             .find('strong').contents[0].split(' - ')]
     horses_df = pd.DataFrame(
         transpose([
-            get_starting_spots(race_info_html),
+            get_horses_ID(race_info_html),
             get_horses_names(race_info_html),
             get_horses_distances(race_info_html),
             get_horses_shoeing_statuses(race_info_html),
-            get_horses_weights(race_info_html),
-            get_horses_barrier_numbers(race_info_html),
+            get_jockeys_weights(race_info_html),
+            get_horses_barrier(race_info_html),
             get_horses_countries(race_info_html),
             get_horses_blinkers_statuses(race_info_html),
             get_horses_sexes(race_info_html),
@@ -328,12 +330,12 @@ def retrieve_horses(race_soup, race_number):
             get_horses_past_performances(race_info_html),
             get_horses_running_statuses(race_info_html)]),
         columns=[
-            'starting_position',
+            'horse_ID',
             'horse_name',
             'running_distance',
             'unshoed',
-            'weight',
-            'inside_barrier',
+            'jockeys_weight',
+            'barrier',
             'country',
             'blinkers',
             'sex',
@@ -350,25 +352,25 @@ def retrieve_horses(race_soup, race_number):
     # double entries for a given horse.
     horses_df['odds'] = get_horses_odds(race_info_html, len(horses_df))
     if len(horses_df) != race_participants_number:
-        horses_df.drop_duplicates('starting_position', inplace=True)
+        horses_df.drop_duplicates('horse_ID', inplace=True)
     horses_df['finish_position'] = get_winners(race_result,
                                                race_participants_number)
     return horses_df
 
 
-years = [x for x in range(2018, 2020)]
+years = [x for x in range(2004, 2020)]
 months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
           'juillet', 'aout', 'septembre', 'octobre', 'novembre',
           'decembre']
 
 for i in years:
     final_race_df = pd.DataFrame(columns=[
-        'starting_position',
+        'horse_ID',
         'horse_name',
         'running_distance',
         'unshoed',
-        'weight',
-        'inside_barrier',
+        'jockeys_weight',
+        'barrier',
         'country',
         'blinkers',
         'sex',
@@ -395,12 +397,12 @@ for i in years:
     for j in months[0:6]:
         print('Collecting races from '+j+' '+str(i))
         final_race_df = pd.DataFrame(columns=[
-            'starting_position',
+            'horse_ID',
             'horse_name',
             'running_distance',
             'unshoed',
-            'weight',
-            'inside_barrier',
+            'jockeys_weight',
+            'barrier',
             'country',
             'blinkers',
             'sex',
@@ -440,12 +442,12 @@ for i in years:
     for j in months[6:12]:
         print('Collecting races from '+j+' '+str(i))
         final_race_df = pd.DataFrame(columns=[
-            'starting_position',
+            'horse_ID',
             'horse_name',
             'running_distance',
             'unshoed',
-            'weight',
-            'inside_barrier',
+            'jockeys_weight',
+            'barrier',
             'country',
             'blinkers',
             'sex',
